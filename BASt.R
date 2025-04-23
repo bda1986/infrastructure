@@ -77,3 +77,11 @@ ggplot()+
 ggplot()+
   geom_sf(data = join, aes(fill = as.factor(nuv)))+
   scale_fill_viridis_d(name ="Nicht\nunter\nVerkehr")
+
+ggplot()+
+  geom_sf(data = join, aes(fill = n))+
+  scale_fill_viridis_c(name ="Anzahl\nBrücken")+
+  theme(legend.position = "bottom")+
+  labs(title = "Anzahl Brücken pro Landkreis",
+       subtitle = "Datenquelle: BAST")
+
