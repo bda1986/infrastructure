@@ -56,13 +56,13 @@ ggplot()+
   geom_sf(data = bast_sf, size = 0.5)
 
 join <- sf::st_join(kreise_sf, bast_sf) |> 
-  dplyr::group_by(NUTS) |> 
+  dplyr::group_by(AGS) |> 
   dplyr::summarise(n = n(),
                    mean_zn = mean(ZN, na.rm = TRUE),
                    sd_zn = sd(ZN, na.rm = TRUE),
                    max_zn = max(ZN, na.rm = TRUE),
                    min_zn = min(ZN, na.rm = TRUE),
-                   nuv = max(nichtunterverkehr))
+                   nuv = sum(nichtunterverkehr, na.rm = TRUE))
 
 
 ggplot()+
@@ -85,3 +85,68 @@ ggplot()+
   labs(title = "Anzahl Brücken pro Landkreis",
        subtitle = "Datenquelle: BAST")
 
+
+# Combine -----------------------------------------------------------------
+source("./elections.R")
+
+join <- join |> 
+  dplyr::left_join(data_cty_latest, by = c("AGS"))
+
+
+## Plots of individual party results ---------------------------------------
+# AfD
+ggplot()+
+  geom_sf(data = join, aes(fill = afd))+
+  scale_fill_gradient(low = "#ccccff", high = "#0000cc", name = "AfD\nStimmenanteil")
+
+# CDU
+ggplot()+
+  geom_sf(data = join, aes(fill = cdu_csu))+
+  scale_fill_gradient(low = "#cccccc", high = "#000000", name = "CDU/CSU\nStimmenanteil")
+
+# SPD
+ggplot()+
+  geom_sf(data = join, aes(fill = spd))+
+  scale_fill_gradient(low = "#ffcccc", high = "#cc0000", name = "SPD\nStimmenanteil")
+
+# Gruene
+ggplot()+
+  geom_sf(data = join, aes(fill = gruene))+
+  scale_fill_gradient(low = "#ccffcc", high = "#00cc00", name = "Grüne\nStimmenanteil")
+
+
+
+## Plot strongest party ----------------------------------------------------
+join <- join |> 
+  dplyr::rowwise() |> 
+  dplyr::mutate(
+    strongest = c("AfD", "CDU/CSU", "SPD", "Gruene")[which.max(c(afd, cdu_csu, spd, gruene))]
+  )
+
+ggplot()+
+  geom_sf(data = join, aes(fill = strongest, color = nuv>0, linewidth = nuv>0))+
+  scale_fill_manual(
+    values = c("AfD" = "#0000cc", "CDU/CSU" = "#202020", "SPD" = "#cc0000", "Gruene" = "#00cc00"),
+    name = "Stärkste\nPartei"
+  )+
+  scale_color_manual(
+    values = c("TRUE" = alpha("#cccccc", 1), "FALSE" = alpha("#000000", 0.5)),
+    name = "Nicht\nunter\nVerkehr"
+  )+
+  scale_linewidth_manual(
+    values = c("TRUE" = 0.5, "FALSE" = 0.1),
+    name = "Nicht\nunter\nVerkehr"
+  )
+
+
+ggplot()+
+  geom_sf(data = join, aes(fill = afd, color = nuv>0, linewidth = nuv>0))+
+  scale_fill_gradient(low = "#ccccff", high = "#0000cc", name = "AfD\nStimmenanteil")+
+  scale_color_manual(
+    values = c("TRUE" = alpha("#ff0000", 1), "FALSE" = alpha("#000000", 0.5)),
+    name = "Nicht\nunter\nVerkehr"
+  )+
+  scale_linewidth_manual(
+    values = c("TRUE" = 0.5, "FALSE" = 0.1),
+    name = "Nicht\nunter\nVerkehr"
+  )
