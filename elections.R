@@ -26,6 +26,5 @@ data_latest <- data %>%
   filter(election_year == max(election_year, na.rm = TRUE)) %>%
   ungroup()
 
-export(data_latest, "F:/git/infrastructure/data/elections/federal_muni_harm.RData")
 
 
